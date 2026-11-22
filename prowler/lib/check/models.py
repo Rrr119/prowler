@@ -753,6 +753,18 @@ class Check_Report:
         self.resource_details = ""
         self.resource_tags = getattr(resource, "tags", []) if resource else []
         self.muted = False
+        # Checks that audit resources belonging to accounts other than the
+        # provider's audited account (for example, AWS Organizations member
+        # accounts) can override the account attribution for each finding.
+        # Finding.generate_output() uses these values when present.
+        self.account_uid = None
+        self.account_name = None
+        self.account_email = None
+        self.account_organization_uid = None
+        self.account_organization_name = None
+        self.account_ou_uid = None
+        self.account_ou_name = None
+        self.account_tags = None
         # Structured, machine-readable detail a check wants to hand downstream
         # (stored as the finding's raw result), so consumers never parse
         # status_extended prose. Empty for almost every check.

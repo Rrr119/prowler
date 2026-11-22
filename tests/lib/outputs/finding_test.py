@@ -322,6 +322,48 @@ class TestFinding:
 
         assert finding_output.raw == {"threats": [{"id": "demo-ssh-bypass"}]}
 
+    def test_generate_output_uses_check_account_override(self):
+        provider = MagicMock()
+        provider.type = "aws"
+        provider.identity.profile = "mock_auth"
+        provider.identity.account = "123456789012"
+        provider.identity.partition = "aws"
+        provider.organizations_metadata = None
+
+        check_output = MagicMock()
+        check_output.resource_id = "222222222222"
+        check_output.resource_arn = (
+            "arn:aws:organizations::123456789012:account/o-abcde12345/222222222222"
+        )
+        check_output.resource_details = ""
+        check_output.resource_tags = {}
+        check_output.region = "us-east-1"
+        check_output.partition = "aws"
+        check_output.status = Status.FAIL
+        check_output.status_extended = "member account finding"
+        check_output.muted = False
+        check_output.check_metadata = mock_check_metadata(provider="aws")
+        check_output.resource = {}
+        check_output.compliance = {}
+        check_output.raw = {}
+        check_output.account_uid = "222222222222"
+        check_output.account_name = "member-account"
+        check_output.account_email = "member@example.com"
+        check_output.account_tags = {"owner": "security"}
+
+        output_options = MagicMock()
+        output_options.unix_timestamp = False
+
+        finding_output = Finding.generate_output(provider, check_output, output_options)
+
+        assert finding_output.account_uid == "222222222222"
+        assert finding_output.account_name == "member-account"
+        assert finding_output.account_email == "member@example.com"
+        assert finding_output.account_tags == {"owner": "security"}
+        assert finding_output.uid.startswith(
+            "prowler-aws-service_check_id-222222222222-"
+        )
+
     def test_generate_output_aws_without_organizations_metadata(self):
         # Simulates running without --organizations-role
         provider = MagicMock()

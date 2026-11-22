@@ -1,0 +1,41 @@
+{
+  "Provider": "aws",
+  "CheckID": "organizations_accounts_have_baseline_scp",
+  "CheckTitle": "AWS Organizations accounts have a baseline service control policy attached",
+  "CheckType": [
+    "Software and Configuration Checks/AWS Security Best Practices"
+  ],
+  "ServiceName": "organizations",
+  "SubServiceName": "",
+  "ResourceIdTemplate": "",
+  "Severity": "medium",
+  "ResourceType": "Other",
+  "ResourceGroup": "governance",
+  "Description": "Every **AWS Organizations member account** has a **service control policy** other than `FullAWSAccess` attached directly or inherited from its organizational unit or root. SCPs enforce the organization-wide permission baseline.",
+  "Risk": "Accounts covered only by `FullAWSAccess` have no SCP guardrail. A compromised identity can enable risky services, create public resources, or use unapproved regions across the account, threatening **confidentiality**, **integrity**, and **availability**.",
+  "RelatedUrl": "",
+  "AdditionalURLs": [
+    "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+    "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_attach.html"
+  ],
+  "Remediation": {
+    "Code": {
+      "CLI": "aws organizations attach-policy --policy-id <BASELINE_SCP_ID> --target-id <ACCOUNT_ID>",
+      "NativeIaC": "",
+      "Other": "1. Sign in to the AWS Organizations management account\n2. Open AWS Organizations and choose Policies\n3. Create or select the baseline service control policy\n4. Choose Attach policy\n5. Select the member account or its organizational unit and attach the policy",
+      "Terraform": "```hcl\n# Attach the organization's baseline SCP to an account\nresource \"aws_organizations_policy_attachment\" \"<example_resource_name>\" {\n  policy_id = \"<BASELINE_SCP_ID>\"\n  target_id = \"<ACCOUNT_ID>\"  # Critical: gives the account an SCP guardrail\n}\n```"
+    },
+    "Recommendation": {
+      "Text": "Maintain a documented baseline SCP that denies unapproved regions, services, and public exposure. Attach it at the root or organizational unit so every account inherits it, and periodically review exceptions and policy drift.",
+      "Url": "https://hub.prowler.com/check/organizations_accounts_have_baseline_scp"
+    }
+  },
+  "Categories": [
+    "identity-access"
+  ],
+  "DependsOn": [],
+  "RelatedTo": [
+    "organizations_scp_check_deny_regions"
+  ],
+  "Notes": "The check evaluates SCP attachment, not policy content. A policy other than FullAWSAccess is treated as a baseline guardrail."
+}

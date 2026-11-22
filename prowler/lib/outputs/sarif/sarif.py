@@ -32,21 +32,48 @@ class SARIF(Output):
     def transform(self, findings: list[Finding]) -> None:
         """Transform findings into a SARIF 2.1.0 document.
 
-        Only FAIL findings that are not muted are included. Each unique
-        check ID produces one rule entry; multiple findings for the same
-        check share the rule via ruleIndex.
+        Only FAIL findings that are not muted are included. Runs are grouped
+        by provider and account so multi-account scans remain attributable
+        when uploaded to code scanning or other SARIF consumers. Each unique
+        check ID produces one rule entry per run; multiple findings for the
+        same check share the rule via ruleIndex.
 
         Args:
             findings: List of Finding objects to transform.
         """
-        rules = {}
-        rule_indices = {}
-        results = []
+        grouped_findings = {}
 
         for finding in findings:
             if finding.status != "FAIL" or finding.muted:
                 continue
 
+            account_key = (finding.metadata.Provider, finding.account_uid or "")
+            grouped_findings.setdefault(account_key, []).append(finding)
+
+        if not grouped_findings:
+            self._data = [self._build_document([self._build_run([], None, None)])]
+            return
+
+        runs = [
+            self._build_run(account_findings, provider, account_uid)
+            for (provider, account_uid), account_findings in sorted(
+                grouped_findings.items()
+            )
+        ]
+        self._data = [self._build_document(runs)]
+
+    def _build_run(
+        self,
+        findings: list[Finding],
+        provider: Optional[str],
+        account_uid: Optional[str],
+    ) -> dict:
+        """Build one SARIF run for a provider/account group."""
+        rules = {}
+        rule_indices = {}
+        results = []
+
+        for finding in findings:
             check_id = finding.metadata.CheckID
             severity = finding.metadata.Severity.lower()
 
@@ -91,6 +118,11 @@ class SARIF(Output):
                 "message": {
                     "text": finding.status_extended or finding.metadata.CheckTitle
                 },
+                "properties": {
+                    "provider": finding.metadata.Provider,
+                    "accountUid": finding.account_uid or "",
+                    "accountName": finding.account_name or "",
+                },
             }
 
             location = self._build_location(finding)
@@ -99,25 +131,42 @@ class SARIF(Output):
 
             results.append(result)
 
-        sarif_document = {
-            "$schema": SARIF_SCHEMA_URL,
-            "version": SARIF_VERSION,
-            "runs": [
-                {
-                    "tool": {
-                        "driver": {
-                            "name": "Prowler",
-                            "version": prowler_version,
-                            "informationUri": "https://prowler.com",
-                            "rules": list(rules.values()),
-                        },
-                    },
-                    "results": results,
+        run = {
+            "tool": {
+                "driver": {
+                    "name": "Prowler",
+                    "version": prowler_version,
+                    "informationUri": "https://prowler.com",
+                    "rules": list(rules.values()),
                 },
-            ],
+            },
+            "results": results,
         }
 
-        self._data = [sarif_document]
+        if provider is not None and account_uid is not None:
+            account_name = next(
+                (finding.account_name for finding in findings if finding.account_name),
+                "",
+            )
+            run["automationDetails"] = {
+                "id": f"prowler/{provider}/{account_uid}",
+            }
+            run["properties"] = {
+                "provider": provider,
+                "accountUid": account_uid,
+                "accountName": account_name,
+            }
+
+        return run
+
+    @staticmethod
+    def _build_document(runs: list[dict]) -> dict:
+        """Wrap one or more runs in a SARIF 2.1.0 document."""
+        return {
+            "$schema": SARIF_SCHEMA_URL,
+            "version": SARIF_VERSION,
+            "runs": runs,
+        }
 
     def batch_write_data_to_file(self) -> None:
         """Write the SARIF document to the output file as JSON."""

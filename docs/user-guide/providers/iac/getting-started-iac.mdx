@@ -143,7 +143,7 @@ prowler iac --scan-path ./my-iac-directory --exclude-path ./my-iac-directory/tes
 
 ### Output
 
-Use the standard Prowler output options. The IaC provider also supports [SARIF](/user-guide/cli/tutorials/reporting#sarif-iac-only) output for GitHub Code Scanning integration:
+Use the standard Prowler output options. The IaC provider also supports [SARIF](/user-guide/cli/tutorials/reporting#sarif) output for GitHub Code Scanning integration:
 
 ```sh
 prowler iac --scan-path ./iac --output-formats csv json-ocsf html
@@ -159,4 +159,4 @@ To generate SARIF output for integration with SARIF-compatible tools:
 prowler iac --scan-repository-url https://github.com/user/repo -M sarif
 ```
 
-See the [SARIF reporting documentation](/user-guide/cli/tutorials/reporting#sarif-iac-only) for details on the format and severity mapping.
+See the [SARIF reporting documentation](/user-guide/cli/tutorials/reporting#sarif) for details on the format and severity mapping.

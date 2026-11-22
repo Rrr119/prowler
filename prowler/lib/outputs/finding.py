@@ -23,6 +23,17 @@ from prowler.providers.github.models import GithubAppIdentityInfo, GithubIdentit
 
 RESOURCE_METADATA_WARNING_SIZE = 10 * 1024 * 1024
 
+ACCOUNT_FIELDS = (
+    "account_uid",
+    "account_name",
+    "account_email",
+    "account_organization_uid",
+    "account_organization_name",
+    "account_ou_uid",
+    "account_ou_name",
+    "account_tags",
+)
+
 
 class Finding(BaseModel):
     """
@@ -570,6 +581,18 @@ class Finding(BaseModel):
                 # Dynamic fallback: any external/custom provider
                 provider_data = provider.get_finding_output_data(check_output)
                 output_data.update(provider_data)
+
+            # A check can audit resources that belong to a different account
+            # than the provider's main audited account (AWS Organizations
+            # member accounts, for example). Only accept concrete values so
+            # MagicMock-based providers keep their existing behaviour.
+            for field in ACCOUNT_FIELDS:
+                override = getattr(check_output, field, None)
+                if field == "account_tags":
+                    if isinstance(override, dict) and override:
+                        output_data[field] = override
+                elif isinstance(override, str) and override:
+                    output_data[field] = override
 
             # check_output Unique ID
             # TODO: move this to a function

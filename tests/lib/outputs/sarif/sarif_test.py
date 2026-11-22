@@ -127,6 +127,75 @@ class TestSARIF:
         assert run["results"][0]["ruleIndex"] == 0
         assert run["results"][1]["ruleIndex"] == 1
 
+    def test_transform_groups_runs_by_provider_and_account(self):
+        findings = [
+            generate_finding_output(
+                status="FAIL",
+                provider="aws",
+                account_uid="111111111111",
+                account_name="production",
+                resource_name="arn:aws:s3:::production-bucket",
+                check_id="s3_bucket_public_access",
+                service_name="s3",
+            ),
+            generate_finding_output(
+                status="FAIL",
+                provider="aws",
+                account_uid="222222222222",
+                account_name="development",
+                resource_name="arn:aws:s3:::development-bucket",
+                check_id="s3_bucket_public_access",
+                service_name="s3",
+            ),
+            generate_finding_output(
+                status="FAIL",
+                provider="gcp",
+                account_uid="111111111111",
+                account_name="shared-project-id",
+                resource_name="bucket-one",
+                check_id="cloudstorage_bucket_public_access",
+                service_name="cloudstorage",
+            ),
+        ]
+
+        sarif = SARIF(findings=findings, file_path=None)
+
+        runs = sarif.data[0]["runs"]
+        assert len(runs) == 3
+        assert [run["properties"]["provider"] for run in runs] == [
+            "aws",
+            "aws",
+            "gcp",
+        ]
+        assert [run["properties"]["accountUid"] for run in runs] == [
+            "111111111111",
+            "222222222222",
+            "111111111111",
+        ]
+        assert runs[0]["automationDetails"]["id"] == ("prowler/aws/111111111111")
+        assert len(runs[0]["results"]) == 1
+        assert len(runs[0]["tool"]["driver"]["rules"]) == 1
+
+    def test_transform_100_accounts_produces_one_run_per_account(self):
+        findings = [
+            generate_finding_output(
+                status="FAIL",
+                account_uid=f"{index:012d}",
+                account_name=f"account-{index}",
+                resource_name=f"resource-{index}",
+            )
+            for index in range(100)
+        ]
+
+        sarif = SARIF(findings=findings, file_path=None)
+
+        runs = sarif.data[0]["runs"]
+        assert len(runs) == 100
+        assert all(len(run["results"]) == 1 for run in runs)
+        assert {run["properties"]["accountUid"] for run in runs} == {
+            f"{index:012d}" for index in range(100)
+        }
+
     def test_transform_location_with_line_range(self):
         finding = generate_finding_output(
             status="FAIL",

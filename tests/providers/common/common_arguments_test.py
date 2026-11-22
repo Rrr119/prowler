@@ -30,15 +30,15 @@ class TestValidateSarifUsage:
         assert valid is True
         assert msg == ""
 
-    def test_sarif_with_non_iac_provider(self):
+    def test_sarif_with_cloud_provider(self):
         valid, msg = validate_sarif_usage("aws", ["sarif"])
-        assert valid is False
-        assert "iac" in msg
+        assert valid is True
+        assert msg == ""
 
     def test_sarif_with_other_provider(self):
         valid, msg = validate_sarif_usage("gcp", ["csv", "sarif"])
-        assert valid is False
-        assert "gcp" in msg
+        assert valid is True
+        assert msg == ""
 
     def test_no_sarif_in_formats(self):
         valid, msg = validate_sarif_usage("aws", ["csv", "html"])
