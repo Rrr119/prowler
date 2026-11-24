@@ -49,6 +49,11 @@ from prowler.lib.check.compliance_models import (
     Compliance,
     get_bulk_compliance_frameworks_universal,
 )
+from prowler.lib.check.custom_compliance import (
+    CustomComplianceError,
+    load_custom_compliance_frameworks,
+    merge_custom_compliance_frameworks,
+)
 from prowler.lib.check.custom_checks_metadata import (
     parse_custom_checks_metadata_file,
     update_checks_metadata,
@@ -268,6 +273,7 @@ def prowler():
     checks_folder = args.checks_folder
     severities = args.severity
     compliance_framework = args.compliance
+    custom_compliance_files = getattr(args, "custom_compliance_file", None)
     custom_checks_metadata_file = args.custom_checks_metadata_file
     default_execution = (
         not checks
@@ -287,6 +293,23 @@ def prowler():
     if not args.no_banner:
         legend = args.verbose or getattr(args, "fixer", None)
         print_banner(legend, provider)
+
+    # Load local compliance files before selecting checks, so the custom
+    # framework requirements can drive the execution set.
+    custom_compliance_frameworks = {}
+    custom_universal_frameworks = {}
+    if custom_compliance_files:
+        try:
+            (
+                custom_compliance_frameworks,
+                custom_universal_frameworks,
+            ) = load_custom_compliance_frameworks(provider, custom_compliance_files)
+        except CustomComplianceError as error:
+            logger.critical(str(error))
+            sys.exit(1)
+        compliance_framework = sorted(
+            {*custom_compliance_frameworks, *custom_universal_frameworks}
+        )
 
     # We treat the compliance framework as another output format
     if compliance_framework:
@@ -334,12 +357,26 @@ def prowler():
     # Skip compliance frameworks for external-tool providers
     if not Provider.is_tool_wrapper_provider(provider):
         bulk_compliance_frameworks = Compliance.get_bulk(provider)
+        # Load universal compliance frameworks for new rendering pipeline
+        universal_frameworks = get_bulk_compliance_frameworks_universal(provider)
+        if custom_compliance_frameworks or custom_universal_frameworks:
+            try:
+                (
+                    bulk_compliance_frameworks,
+                    universal_frameworks,
+                ) = merge_custom_compliance_frameworks(
+                    bulk_compliance_frameworks,
+                    universal_frameworks,
+                    custom_compliance_frameworks,
+                    custom_universal_frameworks,
+                )
+            except CustomComplianceError as error:
+                logger.critical(str(error))
+                sys.exit(1)
         # Complete checks metadata with the compliance framework specification
         bulk_checks_metadata = update_checks_metadata_with_compliance(
             bulk_compliance_frameworks, bulk_checks_metadata
         )
-        # Load universal compliance frameworks for new rendering pipeline
-        universal_frameworks = get_bulk_compliance_frameworks_universal(provider)
 
     # Update checks metadata if the --custom-checks-metadata-file is present
     custom_checks_metadata = None

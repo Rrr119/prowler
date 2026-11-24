@@ -1,0 +1,51 @@
+{
+  "Framework": "CUSTOM-CSB",
+  "Name": "Custom Cloud Security Baseline",
+  "Provider": "AWS",
+  "Version": "1.0",
+  "Description": "Example organization-specific AWS cloud security baseline backed by custom Prowler checks.",
+  "Requirements": [
+    {
+      "Id": "CSB-1",
+      "Description": "S3 buckets must retain object history by enabling versioning.",
+      "Attributes": [
+        {
+          "ItemId": "CSB-1",
+          "Section": "Storage Security",
+          "Service": "s3"
+        }
+      ],
+      "Checks": [
+        "s3_custom_bucket_versioning_enabled"
+      ]
+    },
+    {
+      "Id": "CSB-2",
+      "Description": "EC2 instances must require IMDSv2 or disable the instance metadata service.",
+      "Attributes": [
+        {
+          "ItemId": "CSB-2",
+          "Section": "Compute Security",
+          "Service": "ec2"
+        }
+      ],
+      "Checks": [
+        "ec2_custom_instance_imdsv2_required"
+      ]
+    },
+    {
+      "Id": "CSB-3",
+      "Description": "The AWS root user must have MFA enabled.",
+      "Attributes": [
+        {
+          "ItemId": "CSB-3",
+          "Section": "Identity Security",
+          "Service": "iam"
+        }
+      ],
+      "Checks": [
+        "iam_custom_root_mfa_enabled"
+      ]
+    }
+  ]
+}

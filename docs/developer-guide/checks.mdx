@@ -468,3 +468,35 @@ The metadata structure is enforced in code using a Pydantic model. For reference
 Details for specific providers can be found in documentation pages named using the pattern `<provider_name>-details`.
 
 Checks that scan resources for plaintext secrets follow a dedicated batched structure. Refer to [Secret-Scanning Checks](/developer-guide/secret-scanning-checks) before creating or updating one.
+
+## External Checks (Plug-Ins)
+
+Checks can ship in another package through the entry-point group
+`prowler.checks.<provider>`. The entry-point value is the module path
+`<package>.services.<service>.<check>.<check>`, matching the built-in layout.
+A built-in check wins when a plug-in reuses its CheckID.
+
+For a quick local custom check without packaging, use `--checks-folder` /
+`-x`. To reuse checks across environments, install a plug-in package:
+
+```toml title="pyproject.toml"
+[project.entry-points."prowler.checks.aws"]
+s3_custom_bucket_versioning_enabled = "my_checks.services.s3.s3_custom_bucket_versioning_enabled.s3_custom_bucket_versioning_enabled"
+```
+
+The plug-in contract is the same as the built-in contract:
+
+- The class, module, file and metadata `CheckID` share one name.
+- `ServiceName` is the first segment of that name.
+- `execute()` returns the provider report type, such as
+  `Check_Report_AWS`.
+- Metadata remains in `<check>.metadata.json`; no registration code or custom
+  output formatter is required.
+
+Custom compliance frameworks resolve plug-in checks against the metadata
+loaded from entry points. They can therefore select plug-in checks through
+`--compliance` or through a local `--custom-compliance-file`.
+
+The [`examples/custom_checks`](https://github.com/prowler-cloud/prowler/tree/master/examples/custom_checks)
+package contains three AWS checks, their metadata and a custom framework used
+by the SDK integration tests.

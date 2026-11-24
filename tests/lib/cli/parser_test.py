@@ -717,6 +717,20 @@ class Test_Parser:
         assert framework_1 in parsed.compliance
         assert framework_2 in parsed.compliance
 
+    def test_checks_parser_custom_compliance_file(self):
+        argument = "--custom-compliance-file"
+        filename = "custom_baseline_aws.json"
+        command = [prowler_command, argument, filename]
+        parsed = self.parser.parse(command)
+        assert parsed.custom_compliance_file == [filename]
+
+    def test_checks_parser_custom_compliance_file_alias(self):
+        argument = "--compliance-file"
+        filenames = ["storage_baseline.json", "compute_baseline.json"]
+        command = [prowler_command, argument, *filenames]
+        parsed = self.parser.parse(command)
+        assert parsed.custom_compliance_file == filenames
+
     def test_checks_parser_categories(self):
         argument = "--categories"
         category = "secrets"

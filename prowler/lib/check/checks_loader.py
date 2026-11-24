@@ -172,6 +172,7 @@ def load_checks_to_execute(
                 elif compliance_framework in bulk_compliance_frameworks:
                     checks_to_execute.update(
                         CheckMetadata.list(
+                            bulk_checks_metadata=bulk_checks_metadata,
                             bulk_compliance_frameworks=bulk_compliance_frameworks,
                             compliance_framework=compliance_framework,
                         )

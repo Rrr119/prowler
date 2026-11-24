@@ -282,6 +282,45 @@ class TestCheckLoader:
                 provider=self.provider,
             )
 
+    def test_compliance_selection_uses_already_loaded_plugin_metadata(self):
+        """Custom compliance can select checks discovered from a plug-in.
+
+        Reproduces the regression where the compliance branch rebuilt metadata
+        from built-ins only, dropping every external check listed by a custom
+        framework.
+        """
+        bulk_checks_metadata = {
+            S3_BUCKET_LEVEL_PUBLIC_ACCESS_BLOCK_NAME: self.get_custom_check_s3_metadata()
+        }
+        bulk_compliance_frameworks = {
+            "custom_aws": Compliance(
+                Framework="CUSTOM",
+                Name="Custom",
+                Provider="aws",
+                Version="1.0",
+                Description="Custom framework",
+                Requirements=[
+                    Compliance_Requirement(
+                        Checks=[S3_BUCKET_LEVEL_PUBLIC_ACCESS_BLOCK_NAME],
+                        Id="CUSTOM-1",
+                        Description="",
+                        Attributes=[],
+                    )
+                ],
+            )
+        }
+
+        with patch(
+            "prowler.lib.check.checks_loader.CheckMetadata.get_bulk",
+            return_value={},
+        ):
+            assert {S3_BUCKET_LEVEL_PUBLIC_ACCESS_BLOCK_NAME} == load_checks_to_execute(
+                bulk_checks_metadata=bulk_checks_metadata,
+                bulk_compliance_frameworks=bulk_compliance_frameworks,
+                compliance_frameworks=["custom_aws"],
+                provider=self.provider,
+            )
+
     def test_load_checks_to_execute_with_categories(
         self,
     ):

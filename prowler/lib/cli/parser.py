@@ -384,6 +384,12 @@ Detailed documentation at https://docs.prowler.com
             choices=available_compliance_frameworks,
         )
         group.add_argument(
+            "--custom-compliance-file",
+            "--compliance-file",
+            nargs="+",
+            help="JSON file(s) containing custom compliance frameworks. Supports both the legacy provider schema and the universal schema.",
+        )
+        group.add_argument(
             "--category",
             "--categories",
             nargs="+",

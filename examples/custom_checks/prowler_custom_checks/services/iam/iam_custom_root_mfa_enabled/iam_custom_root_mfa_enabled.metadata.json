@@ -1,0 +1,39 @@
+{
+  "Provider": "aws",
+  "CheckID": "iam_custom_root_mfa_enabled",
+  "CheckTitle": "AWS root account has MFA enabled for the custom baseline",
+  "CheckType": [
+    "Software and Configuration Checks/AWS Security Best Practices",
+    "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices"
+  ],
+  "ServiceName": "iam",
+  "SubServiceName": "",
+  "ResourceIdTemplate": "",
+  "Severity": "critical",
+  "ResourceType": "AwsIamUser",
+  "ResourceGroup": "IAM",
+  "Description": "The **AWS root account** must have **multi-factor authentication** enabled under the organization's custom cloud security baseline.",
+  "Risk": "Compromise of root credentials without MFA can lead to full account takeover, including data theft, billing abuse and persistent administrative access.",
+  "RelatedUrl": "",
+  "AdditionalURLs": [
+    "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html#id_root-user_manage_mfa"
+  ],
+  "Remediation": {
+    "Code": {
+      "CLI": "",
+      "NativeIaC": "",
+      "Other": "Register an MFA device for the root user in AWS Security Credentials.",
+      "Terraform": ""
+    },
+    "Recommendation": {
+      "Text": "Enable MFA for the root user, preferably with a hardware authenticator, and avoid using root for daily operations.",
+      "Url": ""
+    }
+  },
+  "Categories": [
+    "identity-access"
+  ],
+  "DependsOn": [],
+  "RelatedTo": [],
+  "Notes": "Example check from the Prowler custom checks plug-in."
+}

@@ -126,6 +126,45 @@ To see more information about how to write checks, refer to the [Developer Guide
 If you want to run ONLY your custom check(s), import it with -x (--checks-folder) and then run it with -c (--checks), e.g.: `console prowler aws -x s3://bucket/prowler/providers/aws/services/s3/s3_bucket_policy/ -c s3_bucket_policy`
 
 </Note>
+
+### Installable Check Plug-Ins
+
+For checks that must be reused across teams or CI images, package them as a
+Python plug-in instead of mounting a checks folder. Register every check in the
+`prowler.checks.<provider>` entry-point group:
+
+```toml title="pyproject.toml"
+[project.entry-points."prowler.checks.aws"]
+s3_custom_bucket_versioning_enabled = "my_checks.services.s3.s3_custom_bucket_versioning_enabled.s3_custom_bucket_versioning_enabled"
+```
+
+The entry-point value follows the built-in module layout:
+`<package>.services.<service>.<check_name>.<check_name>`. The check class,
+module and `CheckID` must use the same name, and the adjacent
+`<check_name>.metadata.json` file must declare the same `ServiceName` as the
+first segment of the check ID.
+
+After installation, Prowler discovers the check through `--list-checks`,
+`--service`, `--checks` and compliance frameworks. Findings use the standard
+`Check_Report_AWS` contract, so they work with every built-in output format.
+See [`examples/custom_checks`](https://github.com/prowler-cloud/prowler/tree/master/examples/custom_checks)
+for a complete package with three AWS checks and a custom baseline.
+
+### Custom Compliance Files
+
+To run a compliance framework without installing it, pass one or more JSON
+files with `--custom-compliance-file` (alias: `--compliance-file`):
+
+```console
+prowler aws --custom-compliance-file ./custom_cloud_security_baseline_aws.json
+```
+
+Prowler accepts both the legacy provider schema and the universal schema. The
+filename without `.json` becomes the framework selector used internally. The
+file's provider must match the provider being scanned, and its name must not
+collide with a built-in framework. Requirements can reference built-in or
+plug-in checks.
+
 ## Severities
 
 Each of Prowler's checks has a severity, which can be one of the following:

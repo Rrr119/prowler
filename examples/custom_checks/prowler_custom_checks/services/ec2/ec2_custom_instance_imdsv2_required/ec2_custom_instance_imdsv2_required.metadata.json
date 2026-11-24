@@ -1,0 +1,41 @@
+{
+  "Provider": "aws",
+  "CheckID": "ec2_custom_instance_imdsv2_required",
+  "CheckTitle": "EC2 instance requires IMDSv2 for the custom baseline",
+  "CheckType": [
+    "Software and Configuration Checks/AWS Security Best Practices",
+    "TTPs/Credential Access"
+  ],
+  "ServiceName": "ec2",
+  "SubServiceName": "",
+  "ResourceIdTemplate": "",
+  "Severity": "high",
+  "ResourceType": "AwsEc2Instance",
+  "ResourceGroup": "compute",
+  "Description": "**EC2 instances** must require **IMDSv2** tokens or disable the instance metadata service.",
+  "Risk": "IMDSv1 permits request forgery attacks to retrieve temporary role credentials, which can enable **privilege escalation**, data access and lateral movement.",
+  "RelatedUrl": "",
+  "AdditionalURLs": [
+    "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html"
+  ],
+  "Remediation": {
+    "Code": {
+      "CLI": "aws ec2 modify-instance-metadata-options --instance-id <INSTANCE_ID> --http-tokens required --http-endpoint enabled",
+      "NativeIaC": "",
+      "Other": "Set Instance metadata service to IMDSv2 only in the EC2 instance metadata options.",
+      "Terraform": ""
+    },
+    "Recommendation": {
+      "Text": "Require IMDSv2 on all instances, disable metadata where it is not needed and keep instance-profile permissions least-privileged.",
+      "Url": ""
+    }
+  },
+  "Categories": [
+    "identity-access",
+    "secrets",
+    "ec2-imdsv1"
+  ],
+  "DependsOn": [],
+  "RelatedTo": [],
+  "Notes": "Example check from the Prowler custom checks plug-in."
+}

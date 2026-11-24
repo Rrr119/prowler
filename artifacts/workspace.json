@@ -1,0 +1,17 @@
+{
+  "root": "/home/dev/feedback/uid36806",
+  "B": "/home/dev/feedback/uid36806",
+  "sha": "ce52dfbf657afa11d8bbcf99980b311b27930abc",
+  "wslDistro": "Ubuntu-26.04",
+  "source": {
+    "owner": "prowler-cloud",
+    "repo": "prowler",
+    "sha": "ce52dfbf657afa11d8bbcf99980b311b27930abc"
+  },
+  "fork": {
+    "owner": "Rrr119",
+    "repo": "prowler",
+    "cloneUrl": "https://github.com/Rrr119/prowler.git"
+  },
+  "at": "2026-11-24T00:01:04.646Z"
+}

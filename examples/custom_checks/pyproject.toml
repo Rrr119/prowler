@@ -1,0 +1,21 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[project]
+name = "prowler-custom-checks-example"
+version = "1.0.0"
+description = "Example plug-in checks and custom compliance baseline for Prowler"
+requires-python = ">=3.10"
+dependencies = ["prowler"]
+
+[project.entry-points."prowler.checks.aws"]
+s3_custom_bucket_versioning_enabled = "prowler_custom_checks.services.s3.s3_custom_bucket_versioning_enabled.s3_custom_bucket_versioning_enabled"
+ec2_custom_instance_imdsv2_required = "prowler_custom_checks.services.ec2.ec2_custom_instance_imdsv2_required.ec2_custom_instance_imdsv2_required"
+iam_custom_root_mfa_enabled = "prowler_custom_checks.services.iam.iam_custom_root_mfa_enabled.iam_custom_root_mfa_enabled"
+
+[project.entry-points."prowler.compliance"]
+aws = "prowler_custom_checks.compliance.aws"
+
+[tool.hatch.build.targets.wheel]
+packages = ["prowler_custom_checks"]
